@@ -46,7 +46,13 @@
       alert("Пожалуйста, введите ваше имя.");
       return;
     }
+alert("📤 Отправка заказа в бота...");
 
+Telegram.WebApp.sendData(JSON.stringify({
+  name,
+  items,
+  total
+}));
     // ✅ Отправка заказа в Telegram WebApp
     if (window.Telegram && Telegram.WebApp) {
       Telegram.WebApp.sendData(JSON.stringify({
