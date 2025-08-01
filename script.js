@@ -149,3 +149,112 @@ const swiper = new Swiper('.swiper-container', {
     clickable: true
   },
 });
+
+function renderProducts(data) {
+  const grouped = {};
+
+  for (const product of data) {
+    const group = product['группа_товаров'];
+    if (!grouped[group]) grouped[group] = [];
+    grouped[group].push(product);
+  }
+
+  const container = document.getElementById('product-list');
+
+  for (const group in grouped) {
+    const groupBlock = document.createElement('div');
+    groupBlock.className = 'product-group';
+    groupBlock.innerHTML = `<h2>${group}</h2><div class="product-list"></div>`;
+
+    const productList = groupBlock.querySelector('.product-list');
+    const products = grouped[group];
+
+    products.forEach(product => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      const fileName = product['фото']?.replaceAll('"', '').trim();
+      const imagePath = `img/banner2/${fileName}`;
+      const price = Number(product['цена']);
+
+      card.innerHTML = `
+        <img src="${imagePath}" alt="${product['название_товара']}" onclick='openModal(${JSON.stringify(product)})'>
+        <p>${product['название_товара']}</p>
+        <p class="weight">${product['граммовка']}</p>
+        <button onclick="updateCartTotal(${price}, '${product['название_товара'].replaceAll("'", "\\'")}')">
+          🛒 ${price.toLocaleString('ru-RU')} ₽
+        </button>
+      `;
+
+      productList.appendChild(card);
+    });
+
+    // 👇 Добавляем "пустышки", если товаров меньше 6
+    const minCards = 6;
+    const missing = minCards - products.length;
+    for (let i = 0; i < missing; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'product-card empty';
+      productList.appendChild(empty);
+    }
+
+    container.appendChild(groupBlock);
+  }
+}
+
+// Открытие модального окна
+function openModal(product) {
+  const modal = document.getElementById("product-modal");
+  document.getElementById("modal-img").src = `img/banner2/${product['фото']}`;
+  document.getElementById("modal-title").textContent = product['название_товара'];
+  document.getElementById("modal-weight").textContent = product['граммовка'];
+  document.getElementById("modal-desc").textContent = product['описание'] || 'Описание отсутствует';
+
+  const price = Number(product['цена']);
+  const action = document.getElementById("modal-action");
+
+  const existing = AppData.cart.find(item => item.name === product['название_товара']);
+
+  if (existing) {
+    let count = existing.count || 1;
+    action.innerHTML = `
+      <div class="counter">
+        <button onclick="changeCount(-1, '${product['название_товара']}')">−</button>
+        <span id="count-value">${count}</span>
+        <button onclick="changeCount(1, '${product['название_товара']}')">+</button>
+      </div>
+    `;
+  } else {
+    action.innerHTML = `
+      <button onclick="addToCart('${product['название_товара']}', ${price})" id="add-to-cart-btn">
+        🛒 ${price.toLocaleString('ru-RU')} ₽
+      </button>
+    `;
+  }
+
+  modal.classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("product-modal").classList.remove("active");
+}
+
+function addToCart(name, price) {
+  AppData.cart.push({ name, price, count: 1 });
+  updateCartTotal(price, name);
+  closeModal();
+}
+
+function changeCount(delta, name) {
+  const item = AppData.cart.find(i => i.name === name);
+  if (!item) return;
+
+  item.count = (item.count || 1) + delta;
+
+  if (item.count <= 0) {
+    AppData.cart = AppData.cart.filter(i => i.name !== name);
+  }
+
+  localStorage.setItem('cart', JSON.stringify(AppData.cart));
+  document.getElementById('count-value').textContent = item.count || 1;
+}
