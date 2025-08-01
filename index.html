@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Доставка суши и пиццы</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"/>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
@@ -13,11 +14,35 @@
 <header>
   <div class="logo">🍕 Sushi&amp;Pizza</div>
   <div class="cart">
+  <div id="tg-user-info" style="padding: 16px; font-size: 16px; font-weight: bold;"></div>
   <a href="cart.html" style="text-decoration: none; color: inherit;">
     🛒 Корзина: <span id="cart-total">0 ₽</span>
   </a>
 </div>
 </header>
+
+<script>
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.expand();
+
+  const user = Telegram.WebApp.initDataUnsafe?.user;
+
+  if (user) {
+    const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+    const username = user.username ? '@' + user.username : '(без username)';
+    const id = user.id;
+
+    document.getElementById("tg-user-info").innerHTML = `
+      👤 <b>${fullName}</b><br>
+      🆔 Telegram ID: <code>${id}</code><br>
+      🏷️ Username: ${username}
+    `;
+  } else {
+    document.getElementById("tg-user-info").textContent = "Данные Telegram недоступны 😢";
+  }
+}
+</script>
+
 
 <div class="tabs">
   <button class="active" onclick="switchTab(this)">Доставка</button>
