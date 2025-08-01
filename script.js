@@ -34,7 +34,8 @@ if (window.Telegram && Telegram.WebApp) {
           skipEmptyLines: true
         });
 
-        const userRows = data.filter(row => row.telegram_id === String(AppData.user.id));
+        const userRows = data.filter(row => String(row.telegram_id).trim() === String(AppData.user.id));
+
 
         if (userRows.length > 0) {
           userRows.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
