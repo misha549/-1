@@ -77,3 +77,27 @@ fetch('товары_обновленный.csv')
     }
   });
 
+// Подключаем WebApp SDK Telegram
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.expand(); // Разворачиваем мини-приложение на весь экран
+
+  const user = Telegram.WebApp.initDataUnsafe?.user;
+
+  if (user) {
+    const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+    const username = user.username || '(без username)';
+    const id = user.id;
+
+    // Вставляем имя в input
+    document.getElementById("user-name").value = fullName;
+
+    // Показываем информацию на экране
+    document.getElementById("tg-user-info").innerHTML = `
+      👤 Вы зашли как <b>${fullName}</b> (@${username})<br>
+      🆔 Telegram ID: <code>${id}</code>
+    `;
+  } else {
+    document.getElementById("tg-user-info").textContent = "Данные Telegram недоступны 😢";
+  }
+}
+
