@@ -26,7 +26,7 @@ if (window.Telegram && Telegram.WebApp) {
       phone_number: null
     };
 
-    fetch('../users.csv')
+    fetch('users.csv')
       .then(res => res.text())
       .then(csvText => {
         const { data } = Papa.parse(csvText, {
