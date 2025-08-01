@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Корзина</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <div class="logo">🍕 Sushi&amp;Pizza</div>
+  <div class="cart">
+    <a href="index.html" style="text-decoration: none; color: inherit;">← Назад</a>
+  </div>
+</header>
+
+<div class="cart-page">
+  <h2>🛒 Ваша корзина</h2>
+  <ul id="cart-items" class="cart-items"></ul>
+  <div class="cart-summary">
+    <input type="text" id="user-name" placeholder="Введите ваше имя">
+    <div class="total">Итого: <span id="cart-sum">0 ₽</span></div>
+    <button id="checkout-btn">Оформить заказ</button>
+  </div>
+</div>
+
+<script>
+  const items = JSON.parse(localStorage.getItem("cart") || "[]");
+  const list = document.getElementById("cart-items");
+  const sumElem = document.getElementById("cart-sum");
+
+  let total = 0;
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = `${item.name} — ${item.price.toLocaleString('ru-RU')} ₽`;
+    list.appendChild(li);
+    total += item.price;
+  });
+  sumElem.textContent = `${total.toLocaleString('ru-RU')} ₽`;
+
+  document.getElementById("checkout-btn").addEventListener("click", () => {
+  const name = document.getElementById("user-name").value.trim();
+  if (!name) {
+    alert("Пожалуйста, введите ваше имя.");
+    return;
+  }
+  alert(`Спасибо, ${name}! Ваш заказ на сумму ${total.toLocaleString('ru-RU')} ₽ оформлен.`);
+  localStorage.removeItem("cart");
+  localStorage.removeItem("cartTotal");
+  location.href = "index.html";
+});
+</script>
+</body>
+</html>

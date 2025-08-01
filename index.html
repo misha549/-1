@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Доставка суши и пиццы</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"/>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍕 Sushi&amp;Pizza</div>
+  <div class="cart">
+  <a href="cart.html" style="text-decoration: none; color: inherit;">
+    🛒 Корзина: <span id="cart-total">0 ₽</span>
+  </a>
+</div>
+</header>
+
+<div class="tabs">
+  <button class="active" onclick="switchTab(this)">Доставка</button>
+  <button onclick="switchTab(this)">Самовывоз</button>
+</div>
+
+<div class="address-container">
+  <span>📍 Самара</span>
+  <button>Укажите адрес</button>
+</div>
+
+<div class="main-banner">
+  <div class="swiper-container">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="img/banner/1.webp" alt="Баннер 1"></div>
+      <div class="swiper-slide"><img src="img/banner/2.webp" alt="Баннер 2"></div>
+      <div class="swiper-slide"><img src="img/banner/3.webp" alt="Баннер 3"></div>
+      <div class="swiper-slide"><img src="img/banner/4.webp" alt="Баннер 4"></div>
+      <div class="swiper-slide"><img src="img/banner/5.webp" alt="Баннер 5"></div>
+      <div class="swiper-slide"><img src="img/banner/6.webp" alt="Баннер 6"></div>
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+</div>
+
+<div class="search">
+  <input type="search" placeholder="Найти блюдо" inputmode="search" autofocus>
+</div>
+
+<div class="categories">
+  <button>Новинки</button>
+  <button>Хиты продаж</button>
+  <button>Лососевый Бум</button>
+  <button>Шеф роллы</button>
+  <button>Сеты</button>
+  <button>Фирменные</button>
+</div>
+
+<div id="product-list"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<script src="script.js"></script>
+
+<footer class="footer">
+  <div class="footer__top">
+    <a href="/" class="footer__logo" itemscope itemtype="https://schema.org/Brand">
+      <img src="/css/static/logo-big.svg" alt="logo" itemprop="logo" />
+      <meta itemprop="name" content="Lovkus" />
+    </a>
+    <div class="footer__contacts">
+      <div class="footer__contacts-title">Единый номер службы доставки:</div>
+      <a href="tel:78462115114" class="footer__contacts-phone">7 846 211 51 14</a>
+    </div>
+    <div class="footer__apps">
+      <span class="footer__apps-title">Заказывайте в приложении, следите за курьером на карте, копите бонусы</span>
+      <div class="footer__apps-buttons">
+        <a href="https://apps.apple.com/ru/app/id6459793458" target="_blank">
+          <img src="/img/appstore.svg" alt="Загрузить в App Store" />
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=ru.goulash.lovkus" target="_blank">
+          <img src="/img/googleplay.svg" alt="Загрузить в Google Play" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <span class="footer__version">Версия сайта WEB-21.00</span>
+    <span>©2025 Служба доставки еды Lovkus</span>
+    <a href="/samara/privacy">Политика конфиденциальности</a>
+    <a href="/samaralanding/cookie">Правила использования cookie</a>
+    <a href="/samara/sitemap">Карта сайта</a>
+    <a href="https://goulash.tech/?utm_source=partners&utm_medium=link&utm_campaign=site" target="_blank" class="footer__powered">
+      <span>Powered by</span> <strong>Goulash.tech</strong>
+    </a>
+  </div>
+</footer>
+
+
+</body>
+</html>
