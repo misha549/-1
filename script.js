@@ -1,3 +1,140 @@
+
+const AppData = {
+  user: null,
+  cart: [],
+  cartTotal: 0,
+  products: []
+};
+
+// Загружаем корзину
+AppData.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+AppData.cartTotal = parseInt(localStorage.getItem('cartTotal')) || 0;
+document.getElementById('cart-total').textContent = `${AppData.cartTotal.toLocaleString('ru-RU')} ₽`;
+
+// Подгружаем пользователя Telegram и телефон из users.csv
+if (window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.expand();
+
+  const tgUser = Telegram.WebApp.initDataUnsafe?.user;
+
+  if (tgUser) {
+    AppData.user = {
+      id: tgUser.id,
+      first_name: tgUser.first_name,
+      last_name: tgUser.last_name || '',
+      username: tgUser.username || '',
+      phone_number: null
+    };
+
+    fetch('../users.csv')
+      .then(res => res.text())
+      .then(csvText => {
+        const { data } = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true
+        });
+
+        const userRows = data.filter(row => row.telegram_id === String(AppData.user.id));
+
+        if (userRows.length > 0) {
+          userRows.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+          AppData.user.phone_number = userRows[0].phone_number;
+        }
+
+        const el = document.getElementById("tg-user-info");
+        if (el) {
+          const fullName = AppData.user.first_name + (AppData.user.last_name ? ' ' + AppData.user.last_name : '');
+          const username = AppData.user.username ? '@' + AppData.user.username : '(без username)';
+          const id = AppData.user.id;
+          const phone = AppData.user.phone_number || '(не найден)';
+
+          el.innerHTML = `
+            👤 <b>${fullName}</b><br>
+            🆔 Telegram ID: <code>${id}</code><br>
+            🏷️ Username: ${username}<br>
+            📞 Телефон: <code>${phone}</code>
+          `;
+        }
+      });
+  } else {
+    const el = document.getElementById("tg-user-info");
+    if (el) {
+      el.textContent = "❌ Не удалось получить данные Telegram.";
+    }
+  }
+}
+
+// Обновление корзины
+function updateCartTotal(amount, name) {
+  AppData.cartTotal += amount;
+  AppData.cart.push({ name, price: amount });
+
+  localStorage.setItem('cartTotal', AppData.cartTotal);
+  localStorage.setItem('cart', JSON.stringify(AppData.cart));
+
+  document.getElementById('cart-total').textContent = `${AppData.cartTotal.toLocaleString('ru-RU')} ₽`;
+}
+
+// Загрузка товаров и отображение
+fetch('товары_обновленный.csv')
+  .then(res => res.text())
+  .then(csvText => {
+    const { data } = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true
+    });
+
+    AppData.products = data;
+    renderProducts(data);
+  });
+
+// Отображение карточек товаров
+function renderProducts(data) {
+  const grouped = {};
+
+  for (const product of data) {
+    const group = product['группа_товаров'];
+    if (!grouped[group]) grouped[group] = [];
+    grouped[group].push(product);
+  }
+
+  const container = document.getElementById('product-list');
+  for (const group in grouped) {
+    const groupBlock = document.createElement('div');
+    groupBlock.className = 'product-group';
+    groupBlock.innerHTML = `<h2>${group}</h2><div class="product-list"></div>`;
+
+    grouped[group].forEach(product => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      const fileName = product['фото']?.replaceAll('"', '').trim();
+      const imagePath = `img/banner2/${fileName}`;
+      const price = Number(product['цена']);
+
+      card.innerHTML = `
+        <img src="${imagePath}" alt="${product['название_товара']}">
+        <p>${product['название_товара']}</p>
+        <p class="weight">${product['граммовка']}</p>
+        <button onclick="updateCartTotal(${price}, '${product['название_товара'].replaceAll("'", "\'")}')">
+          🛒 ${price.toLocaleString('ru-RU')} ₽
+        </button>
+      `;
+
+      groupBlock.querySelector('.product-list').appendChild(card);
+    });
+
+    container.appendChild(groupBlock);
+  }
+}
+
+// Переключение вкладок
+function switchTab(button) {
+  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+  button.classList.add('active');
+}
+
+// Инициализация Swiper
 const swiper = new Swiper('.swiper-container', {
   loop: true,
   centeredSlides: true,
@@ -12,92 +149,3 @@ const swiper = new Swiper('.swiper-container', {
     clickable: true
   },
 });
-
-function switchTab(button) {
-  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-  button.classList.add('active');
-}
-
-let cartTotal = 0;
-function updateCartTotal(amount, name) {
-  cartTotal += amount;
-  localStorage.setItem('cartTotal', cartTotal);
-  document.getElementById('cart-total').textContent = `${cartTotal.toLocaleString('ru-RU')} ₽`;
-
-  const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-  cartItems.push({ name, price: amount });
-  localStorage.setItem('cart', JSON.stringify(cartItems));
-}
-
-cartTotal = parseInt(localStorage.getItem('cartTotal')) || 0;
-document.getElementById('cart-total').textContent = `${cartTotal.toLocaleString('ru-RU')} ₽`;
-
-fetch('товары_обновленный.csv')
-  .then(res => res.text())
-  .then(csvText => {
-    const { data } = Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true
-    });
-
-    const grouped = {};
-    for (const product of data) {
-      const group = product['группа_товаров'];
-      if (!grouped[group]) grouped[group] = [];
-      grouped[group].push(product);
-    }
-
-    const container = document.getElementById('product-list');
-    for (const group in grouped) {
-      const groupBlock = document.createElement('div');
-      groupBlock.className = 'product-group';
-      groupBlock.innerHTML = `<h2>${group}</h2><div class="product-list"></div>`;
-
-      grouped[group].forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-
-        const fileName = product['фото']?.replaceAll('"', '').trim();
-        const imagePath = `img/banner2/${fileName}`;
-        const price = Number(product['цена']);
-
-        card.innerHTML = `
-          <img src="${imagePath}" alt="${product['название_товара']}">
-          <p>${product['название_товара']}</p>
-          <p class="weight">${product['граммовка']}</p>
-          <button onclick="updateCartTotal(${price}, '${product['название_товара'].replaceAll("'", "\\'")}')">
-  🛒 ${price.toLocaleString('ru-RU')} ₽
-</button>
-        `;
-
-        groupBlock.querySelector('.product-list').appendChild(card);
-      });
-
-      container.appendChild(groupBlock);
-    }
-  });
-
-// Подключаем WebApp SDK Telegram
-if (window.Telegram && Telegram.WebApp) {
-  Telegram.WebApp.expand(); // Разворачиваем мини-приложение на весь экран
-
-  const user = Telegram.WebApp.initDataUnsafe?.user;
-
-  if (user) {
-    const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-    const username = user.username || '(без username)';
-    const id = user.id;
-
-    // Вставляем имя в input
-    document.getElementById("user-name").value = fullName;
-
-    // Показываем информацию на экране
-    document.getElementById("tg-user-info").innerHTML = `
-      👤 Вы зашли как <b>${fullName}</b> (@${username})<br>
-      🆔 Telegram ID: <code>${id}</code>
-    `;
-  } else {
-    document.getElementById("tg-user-info").textContent = "Данные Telegram недоступны 😢";
-  }
-}
-
