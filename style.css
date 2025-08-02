@@ -76,38 +76,40 @@ header .cart {
   cursor: pointer;
 }
 
+
 .main-banner {
-  padding: 0 16px;
   margin-top: 6px;
+  padding: 0;
   box-sizing: border-box;
   position: relative;
+  overflow: hidden; /* ✂️ скрывает всё, что выходит за пределы */
 }
 
 .swiper-container {
   width: 100%;
   max-width: 1200px;
-  margin: auto;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
 .swiper-wrapper {
-  padding: 8px 0;
-  gap: 8px;
   display: flex;
 }
 
 .swiper-slide {
-  width: 320px;
-  opacity: 0.3;
-  transition: 0.3s;
-  transform: scale(0.9);
+  width: 80vw;
+  max-width: 320px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  transform: scale(1); /* убрали уменьшение */
+  opacity: 1; /* убрали прозрачность */
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .swiper-slide-active {
-  opacity: 1 !important;
-  transform: scale(1.05);
+  transform: scale(1); /* без увеличения */
 }
 
 .swiper-slide img {
@@ -115,6 +117,8 @@ header .cart {
   height: auto;
   border-radius: 16px;
 }
+
+
 
 .search {
   display: flex;
@@ -172,13 +176,14 @@ header .cart {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin: 0 auto;
-  padding: 0 16px; /* Чтобы не прилипали к краям на маленьких экранах */
+  padding: 0 16px;
   box-sizing: border-box;
 }
 
-product-card {
-  width: 100%;
-  max-width: 100%;
+@media (max-width: 480px) {
+  .product-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 
@@ -545,3 +550,137 @@ body {
     font-size: 15px;
   }
 }
+
+.catalog {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+  position: sticky;
+  top: 60px; /* высота шапки */
+  background: #fff;
+  z-index: 100;
+  border-bottom: 1px solid #eee;
+}
+
+.catalog::-webkit-scrollbar {
+  display: none;
+}
+
+
+.catalog-button {
+  white-space: nowrap;
+  background: #f5f6f7;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e1e1e;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.catalog-button:hover {
+  background: #e0e0e0;
+}
+
+.catalog-button.active {
+  background: #3a424a;
+  color: white;
+}
+
+.header-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+/* СТИЛЬ КНОПКИ ДО */
+.product-card button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #e4e9ef;
+  color: #1b242c;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* КНОПКА ПОСЛЕ ДОБАВЛЕНИЯ */
+.product-card .counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #C30017;
+  color: #fff;
+  border-radius: 14px;
+  padding: 0 10px;
+  width: 100%;
+  min-height: 48px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.product-card .counter button {
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.product-card .counter span {
+  flex-grow: 1;
+  text-align: center;
+}
+
+/* ЗАТЕМНЕНИЕ ФОТО */
+.product-card .image-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.product-card .image-wrapper img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  transition: 0.3s;
+}
+
+.product-card.active .image-wrapper img {
+  filter: brightness(0.5);
+}
+
+/* СЧЁТЧИК НА ИЗОБРАЖЕНИИ */
+.product-card .badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #C30017;
+  color: #fff;
+  padding: 2px 8px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 12px;
+  display: none;
+}
+
+.product-card.active .badge {
+  display: inline-block;
+}
+
+

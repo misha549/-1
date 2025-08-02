@@ -1,4 +1,3 @@
-
 const AppData = {
   user: null,
   cart: [],
@@ -6,7 +5,7 @@ const AppData = {
   products: []
 };
 
-// Загружаем корзину
+// Загружаем корзину из localStorage
 AppData.cart = JSON.parse(localStorage.getItem('cart') || '[]');
 AppData.cartTotal = parseInt(localStorage.getItem('cartTotal')) || 0;
 document.getElementById('cart-total').textContent = `${AppData.cartTotal.toLocaleString('ru-RU')} ₽`;
@@ -64,17 +63,6 @@ if (window.Telegram && Telegram.WebApp) {
   }
 }
 
-// Обновление корзины
-function updateCartTotal(amount, name) {
-  AppData.cartTotal += amount;
-  AppData.cart.push({ name, price: amount });
-
-  localStorage.setItem('cartTotal', AppData.cartTotal);
-  localStorage.setItem('cart', JSON.stringify(AppData.cart));
-
-  document.getElementById('cart-total').textContent = `${AppData.cartTotal.toLocaleString('ru-RU')} ₽`;
-}
-
 // Загрузка товаров и отображение
 fetch('товары_обновленный.csv')
   .then(res => res.text())
@@ -89,6 +77,7 @@ fetch('товары_обновленный.csv')
   });
 
 // Отображение карточек товаров
+
 function renderProducts(data) {
   const grouped = {};
 
@@ -99,89 +88,53 @@ function renderProducts(data) {
   }
 
   const container = document.getElementById('product-list');
-  for (const group in grouped) {
-    const groupBlock = document.createElement('div');
-    groupBlock.className = 'product-group';
-    groupBlock.innerHTML = `<h2>${group}</h2><div class="product-list"></div>`;
+  container.innerHTML = '';
 
-    grouped[group].forEach(product => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
+  // 🎯 Каталог по реальным группам из CSV
+  const catalogContainer = document.getElementById('group-catalog');
+  if (catalogContainer) {
+    catalogContainer.innerHTML = '';
 
-      const fileName = product['фото']?.replaceAll('"', '').trim();
-      const imagePath = `img/banner2/${fileName}`;
-      const price = Number(product['цена']);
+    // Сортировка по алфавиту
+    const sortedGroups = Object.keys(grouped).sort();
 
-      card.innerHTML = `
-        <img src="${imagePath}" alt="${product['название_товара']}">
-        <p>${product['название_товара']}</p>
-        <p class="weight">${product['граммовка']}</p>
-        <button onclick="updateCartTotal(${price}, '${product['название_товара'].replaceAll("'", "\'")}')">
-          🛒 ${price.toLocaleString('ru-RU')} ₽
-        </button>
-      `;
-
-      groupBlock.querySelector('.product-list').appendChild(card);
+    sortedGroups.forEach(group => {
+      const catalogBtn = document.createElement('button');
+      catalogBtn.textContent = group;
+      catalogBtn.className = 'catalog-button';
+      catalogBtn.onclick = () => {
+        const groupBlock = document.querySelector(`[data-group="${group}"]`);
+        if (groupBlock) {
+          groupBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      catalogContainer.appendChild(catalogBtn);
     });
-
-    container.appendChild(groupBlock);
-  }
-}
-
-// Переключение вкладок
-function switchTab(button) {
-  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-  button.classList.add('active');
-}
-
-// Инициализация Swiper
-const swiper = new Swiper('.swiper-container', {
-  loop: true,
-  centeredSlides: true,
-  slidesPerView: 'auto',
-  spaceBetween: 10,
-  autoplay: {
-    delay: 3000,
-    disableOnInteraction: false,
-  },
-  pagination: {
-    el: '.swiper-pagination',
-    clickable: true
-  },
-});
-
-function renderProducts(data) {
-  const grouped = {};
-
-  for (const product of data) {
-    const group = product['группа_товаров'];
-    if (!grouped[group]) grouped[group] = [];
-    grouped[group].push(product);
   }
 
-  const container = document.getElementById('product-list');
-
+  // 📦 Отображение товаров по группам
   for (const group in grouped) {
     const groupBlock = document.createElement('div');
     groupBlock.className = 'product-group';
+    groupBlock.setAttribute('data-group', group);
     groupBlock.innerHTML = `<h2>${group}</h2><div class="product-list"></div>`;
 
     const productList = groupBlock.querySelector('.product-list');
     const products = grouped[group];
 
     products.forEach(product => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-
       const fileName = product['фото']?.replaceAll('"', '').trim();
       const imagePath = `img/banner2/${fileName}`;
       const price = Number(product['цена']);
+
+      const card = document.createElement('div');
+      card.className = 'product-card';
 
       card.innerHTML = `
         <img src="${imagePath}" alt="${product['название_товара']}" onclick='openModal(${JSON.stringify(product)})'>
         <p>${product['название_товара']}</p>
         <p class="weight">${product['граммовка']}</p>
-        <button onclick="updateCartTotal(${price}, '${product['название_товара'].replaceAll("'", "\\'")}')">
+        <button onclick="addToCart('${product['название_товара'].replaceAll("'", "\\'")}', ${price})">
           🛒 ${price.toLocaleString('ru-RU')} ₽
         </button>
       `;
@@ -189,7 +142,7 @@ function renderProducts(data) {
       productList.appendChild(card);
     });
 
-    // 👇 Добавляем "пустышки", если товаров меньше 6
+    // ➕ Пустые карточки если < 6
     const minCards = 6;
     const missing = minCards - products.length;
     for (let i = 0; i < missing; i++) {
@@ -202,7 +155,8 @@ function renderProducts(data) {
   }
 }
 
-// Открытие модального окна
+
+// Открытие модального окна с правильным количеством товара
 function openModal(product) {
   const modal = document.getElementById("product-modal");
   document.getElementById("modal-img").src = `img/banner2/${product['фото']}`;
@@ -214,47 +168,105 @@ function openModal(product) {
   const action = document.getElementById("modal-action");
 
   const existing = AppData.cart.find(item => item.name === product['название_товара']);
+  const count = existing ? existing.count : 0;
 
-  if (existing) {
-    let count = existing.count || 1;
+  if (count > 0) {
     action.innerHTML = `
       <div class="counter">
-        <button onclick="changeCount(-1, '${product['название_товара']}')">−</button>
+        <button id="dec-btn">−</button>
         <span id="count-value">${count}</span>
-        <button onclick="changeCount(1, '${product['название_товара']}')">+</button>
+        <button id="inc-btn">+</button>
       </div>
     `;
+    document.getElementById("dec-btn").onclick = () => changeCount(product['название_товара'], -1, price);
+    document.getElementById("inc-btn").onclick = () => changeCount(product['название_товара'], +1, price);
   } else {
-    action.innerHTML = `
-      <button onclick="addToCart('${product['название_товара']}', ${price})" id="add-to-cart-btn">
-        🛒 ${price.toLocaleString('ru-RU')} ₽
-      </button>
-    `;
+    action.innerHTML = `<button id="add-to-cart-btn">🛒 ${price.toLocaleString('ru-RU')} ₽</button>`;
+    document.getElementById("add-to-cart-btn").onclick = () => addToCart(product['название_товара'], price);
   }
 
   modal.classList.add("active");
 }
 
+// Закрытие модального окна
 function closeModal() {
   document.getElementById("product-modal").classList.remove("active");
 }
 
+// Добавление товара в корзину
 function addToCart(name, price) {
-  AppData.cart.push({ name, price, count: 1 });
-  updateCartTotal(price, name);
-  closeModal();
+  const item = AppData.cart.find(i => i.name === name);
+  if (item) {
+    item.count += 1;
+  } else {
+    AppData.cart.push({ name, price, count: 1 });
+  }
+  saveCartAndUpdateUI();
+  // Обновляем модалку с новым количеством
+  const product = AppData.products.find(p => p['название_товара'] === name);
+  if (product) openModal(product);
 }
 
-function changeCount(delta, name) {
+// Изменение количества товара
+function changeCount(name, delta, price) {
   const item = AppData.cart.find(i => i.name === name);
   if (!item) return;
 
-  item.count = (item.count || 1) + delta;
+  item.count += delta;
 
   if (item.count <= 0) {
     AppData.cart = AppData.cart.filter(i => i.name !== name);
+    closeModal();
+  } else {
+    const countSpan = document.getElementById("count-value");
+    if (countSpan) countSpan.textContent = item.count;
   }
-
-  localStorage.setItem('cart', JSON.stringify(AppData.cart));
-  document.getElementById('count-value').textContent = item.count || 1;
+  saveCartAndUpdateUI();
 }
+
+// Сохранение корзины и обновление суммы
+function saveCartAndUpdateUI() {
+  AppData.cartTotal = AppData.cart.reduce((sum, item) => sum + item.price * item.count, 0);
+  localStorage.setItem('cart', JSON.stringify(AppData.cart));
+  localStorage.setItem('cartTotal', AppData.cartTotal);
+  document.getElementById('cart-total').textContent = `${AppData.cartTotal.toLocaleString('ru-RU')} ₽`;
+}
+
+// Переключение вкладок
+function switchTab(button) {
+  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+  button.classList.add('active');
+}
+
+// Инициализация Swiper
+const swiper = new Swiper('.swiper-container', {
+  loop: true,
+  slidesPerView: 'auto',
+  centeredSlides: true,
+  spaceBetween: 12,
+  grabCursor: true,
+  breakpoints: {
+    0: {
+      slidesPerView: 1.2,
+      centeredSlides: true
+    },
+    600: {
+      slidesPerView: 1.8
+    },
+    900: {
+      slidesPerView: 2.5
+    },
+    1200: {
+      slidesPerView: 3.2
+    }
+  },
+  autoplay: {
+    delay: 3000,
+    disableOnInteraction: false,
+  },
+  pagination: {
+    el: '.swiper-pagination',
+    clickable: true
+  }
+});
+

@@ -22,14 +22,16 @@
     </div>
   </div>
 </div>
-<header>
-  <div class="logo">🍕 Sushi&amp;Pizza</div>
-  <div class="cart">
-  <a href="cart.html" style="text-decoration: none; color: inherit;">
-    🛒 Корзина: <span id="cart-total">0 ₽</span>
-  </a>
+<div class="header-wrapper">
+  <header>
+    <div class="logo">🍕 Sushi&amp;Pizza</div>
+    <div class="cart">
+      <a href="cart.html" style="text-decoration: none; color: inherit;">
+        🛒 Корзина: <span id="cart-total">0 ₽</span>
+      </a>
+    </div>
+  </header>
 </div>
-</header>
 
 <!-- <div id="tg-user-info" style="padding: 16px; font-size: 14px;"></div> -->
 <div class="tabs">
@@ -60,14 +62,8 @@
   <input type="search" placeholder="Найти блюдо" inputmode="search" autofocus>
 </div>
 
-<div class="categories">
-  <button>Новинки</button>
-  <button>Хиты продаж</button>
-  <button>Лососевый Бум</button>
-  <button>Шеф роллы</button>
-  <button>Сеты</button>
-  <button>Фирменные</button>
-</div>
+<div class="catalog" id="group-catalog"></div>
+
 
 <div id="product-list"></div>
 
