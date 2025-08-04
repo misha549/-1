@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Выбор адреса</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Яндекс.Карты -->
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=b58442fa-7eb1-4ed1-b691-48e352fe120c&lang=ru_RU" type="text/javascript"></script>
+
+  <style>
+    body { font-family: sans-serif; margin: 0; }
+    .address-modal {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      z-index: 9999;
+      width: 90%;
+      max-width: 500px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      color: #c90000;
+      margin-bottom: 16px;
+    }
+    .tab-container {
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #f3f3f3;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 10px 10px 0 0;
+    }
+    .tab.active {
+      background: #2e3338;
+      color: white;
+    }
+    .input-block {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 60px; /* увеличенный отступ для подсказок */
+    }
+    .input-block input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      z-index: 2;
+      position: relative;
+    }
+    .select-btn {
+      background: #e4e9ef;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      color: #999;
+    }
+    .select-btn.active {
+      background: #C30017;
+      color: #fff;
+    }
+    #suggestions-list {
+      border: 1px solid #ccc;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: none;
+      position: absolute;
+      top: 100%; /* показывать под input */
+      left: 0;
+      width: 100%;
+      max-height: 200px;
+      overflow: auto;
+      background: white;
+      border-radius: 0 0 12px 12px;
+      z-index: 10000;
+    }
+    #suggestions-list li {
+      padding: 8px;
+      cursor: pointer;
+    }
+    #suggestions-list li:hover {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Адресная модалка -->
+<div id="address-modal" class="address-modal">
+  <div class="modal-header">
+    <span>Самара</span>
+    <button onclick="closeModal()">✕</button>
+  </div>
+
+  <div class="tab-container">
+    <button class="tab active" onclick="switchTab('delivery')">Доставка</button>
+    <button class="tab" onclick="switchTab('pickup')">Самовывоз</button>
+  </div>
+
+  <div class="input-block">
+    <label for="address-input">📍 Куда доставить ваш заказ?</label>
+    <input type="text" id="address-input" placeholder="Введите адрес">
+    <ul id="suggestions-list"></ul>
+  </div>
+
+  <button class="select-btn" onclick="selectAddress()">Выбрать</button>
+
+  <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+</div>
+
+<script>
+const YANDEX_SUGGEST_API_KEY = 'dce758fb-7ad3-4d16-8e52-b241bdc247fa';
+const proxyUrl = 'https://corsproxy.io/?';
+
+let map, marker;
+
+ymaps.ready(() => {
+  map = new ymaps.Map("map", {
+    center: [53.195873, 50.100193],
+    zoom: 12
+  });
+
+  map.events.add('click', e => {
+    const coords = e.get('coords');
+    if (!marker) {
+      marker = new ymaps.Placemark(coords, {}, { preset: 'islands#redIcon' });
+      map.geoObjects.add(marker);
+    } else {
+      marker.geometry.setCoordinates(coords);
+    }
+
+    ymaps.geocode(coords).then(res => {
+      const firstGeoObject = res.geoObjects.get(0);
+      if (firstGeoObject) {
+        const address = firstGeoObject.getAddressLine();
+        document.getElementById('address-input').value = address;
+        activateSelectButton();
+      }
+    });
+  });
+});
+
+const input = document.getElementById('address-input');
+const suggestionsList = document.getElementById('suggestions-list');
+
+input.addEventListener('input', async function () {
+  const query = this.value.trim();
+  if (!query) return (suggestionsList.style.display = 'none');
+
+  const url = `${proxyUrl}https://suggest-maps.yandex.ru/v1/suggest?apikey=${YANDEX_SUGGEST_API_KEY}&text=${encodeURIComponent(query)}&lang=ru_RU&type=geo`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  suggestionsList.innerHTML = '';
+  data.results.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item.title.text;
+    li.addEventListener('click', () => {
+      input.value = item.title.text;
+      suggestionsList.style.display = 'none';
+      activateSelectButton();
+      moveMapToAddress(item.title.text);
+    });
+    suggestionsList.appendChild(li);
+  });
+
+  suggestionsList.style.display = 'block';
+});
+
+document.addEventListener('click', (e) => {
+  if (!suggestionsList.contains(e.target) && e.target !== input) {
+    suggestionsList.style.display = 'none';
+  }
+});
+
+function moveMapToAddress(address) {
+  ymaps.geocode(address).then(res => {
+    const firstGeoObject = res.geoObjects.get(0);
+    if (firstGeoObject) {
+      const coords = firstGeoObject.geometry.getCoordinates();
+      map.setCenter(coords, 16);
+      if (!marker) {
+        marker = new ymaps.Placemark(coords, {}, { preset: 'islands#redIcon' });
+        map.geoObjects.add(marker);
+      } else {
+        marker.geometry.setCoordinates(coords);
+      }
+    }
+  });
+}
+
+function activateSelectButton() {
+  document.querySelector('.select-btn').classList.add('active');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`.tab-container .tab:nth-child(${tab === 'delivery' ? 1 : 2})`).classList.add('active');
+}
+
+function selectAddress() {
+  const address = document.getElementById('address-input').value;
+  if (!address) return alert('Введите адрес');
+  localStorage.setItem('userAddress', address);
+  closeModal();
+}
+
+function closeModal() {
+  document.getElementById('address-modal').style.display = 'none';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('userAddress');
+  if (saved) document.getElementById('address-input').value = saved;
+});
+</script>
+
+</body>
+</html>

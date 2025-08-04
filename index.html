@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+  
+  <div id="bottom-placeholder"></div>
 <div class="modal-overlay" id="product-modal">
   <div class="modal-content">
     <span class="modal-close" onclick="closeModal()">×</span>
@@ -25,11 +27,11 @@
 <div class="header-wrapper">
   <header>
     <div class="logo">🍕 Sushi&amp;Pizza</div>
-    <div class="cart">
-      <a href="cart.html" style="text-decoration: none; color: inherit;">
-        🛒 Корзина: <span id="cart-total">0 ₽</span>
-      </a>
-    </div>
+    <div class="cart" style="display: none;">
+  <a href="cart.html" style="text-decoration: none; color: inherit;">
+    🛒 Корзина: <span id="cart-total">0 ₽</span>
+  </a>
+</div>
   </header>
 </div>
 
@@ -105,6 +107,157 @@
   </div>
 </footer>
 
+<!-- НИЖНЕЕ МЕНЮ -->
+<!-- 🔽 СТИЛИ нижнего меню -->
+<style>
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(64px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-sizing: border-box;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #666;
+    background: none;
+    border: none;
+    flex: 1;
+    padding: 6px 0;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+
+  .nav-icon {
+    font-size: 20px;
+  }
+
+  .nav-item.active,
+  .nav-item:hover {
+    color: #c90000;
+    font-weight: bold;
+  }
+
+  .nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: #c90000;
+    transition: transform 0.3s ease;
+  }
+
+  .nav-item.active::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  .cart-btn {
+    position: relative;
+  }
+
+  .cart-badge {
+    position: absolute;
+    top: 2px;
+    right: 22px;
+    background: #c90000;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 50%;
+    display: none;
+  }
+</style>
+
+<!-- 🔽 HTML самого меню -->
+<nav class="bottom-nav">
+  <button class="nav-item" data-page="promo">
+    <span class="nav-icon">%</span>
+    <span class="nav-label">Акции</span>
+  </button>
+  <button class="nav-item" data-page="menu">
+    <span class="nav-icon">🥤</span>
+    <span class="nav-label">Меню</span>
+  </button>
+  <button class="nav-item cart-btn" data-page="cart">
+    <span class="nav-icon">🛍️</span>
+    <span class="nav-label">Корзина</span>
+    <span class="cart-badge" id="cart-count">0</span>
+  </button>
+  <button class="nav-item" data-page="profile">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Профиль</span>
+  </button>
+  <button class="nav-item" data-page="more">
+    <span class="nav-icon">⋯</span>
+    <span class="nav-label">Ещё</span>
+  </button>
+</nav>
+
+<!-- 🔽 ЛОГИКА работы кнопок -->
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    let currentPage = 'menu';
+const path = location.pathname.split('/').pop(); // получаем имя текущего файла
+
+switch (path) {
+  case 'index.html':
+  case '': // если открыт как /
+    currentPage = 'menu';
+    break;
+  case 'cart.html':
+    currentPage = 'cart';
+    break;
+  case 'promo.html':
+    currentPage = 'promo';
+    break;
+  case 'profile.html':
+    currentPage = 'profile';
+    break;
+  case 'more.html':
+    currentPage = 'more';
+    break;
+}
+
+
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
+      const page = btn.dataset.page;
+      btn.classList.toggle('active', page === currentPage);
+
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+switch (page) {
+  case 'menu': location.href = 'index.html'; break;
+  case 'cart': location.href = 'cart.html'; break;
+  case 'promo': location.href = 'promo.html'; break;
+  case 'profile': location.href = 'profile.html'; break;
+  case 'more': location.href = 'more.html'; break;
+
+
+        }
+      });
+    });
+  });
+</script>
 
 </body>
 </html>

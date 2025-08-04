@@ -71,6 +71,8 @@ Telegram.WebApp.sendData(JSON.stringify({
 
 <!-- НИЖНЕЕ МЕНЮ -->
 <!-- 🔽 СТИЛИ нижнего меню -->
+<!-- НИЖНЕЕ МЕНЮ -->
+<!-- 🔽 СТИЛИ нижнего меню -->
 <style>
   .bottom-nav {
     position: fixed;
@@ -176,7 +178,28 @@ Telegram.WebApp.sendData(JSON.stringify({
 <!-- 🔽 ЛОГИКА работы кнопок -->
 <script>
   window.addEventListener('DOMContentLoaded', () => {
-    const currentPage = location.pathname.includes('cart') ? 'cart' : 'menu';
+    let currentPage = 'menu';
+const path = location.pathname.split('/').pop(); // получаем имя текущего файла
+
+switch (path) {
+  case 'index.html':
+  case '': // если открыт как /
+    currentPage = 'menu';
+    break;
+  case 'cart.html':
+    currentPage = 'cart';
+    break;
+  case 'promo.html':
+    currentPage = 'promo';
+    break;
+  case 'profile.html':
+    currentPage = 'profile';
+    break;
+  case 'more.html':
+    currentPage = 'more';
+    break;
+}
+
 
     document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
       const page = btn.dataset.page;
@@ -186,12 +209,14 @@ Telegram.WebApp.sendData(JSON.stringify({
         document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        switch (page) {
-          case 'menu': location.href = 'index.html'; break;
-          case 'cart': location.href = 'cart.html'; break;
-          case 'promo': location.href = 'promo.html'; break
-          case 'profile': location.href = 'profile.html'; break
-          case 'more': location.href = 'more.html'; break
+switch (page) {
+  case 'menu': location.href = 'index.html'; break;
+  case 'cart': location.href = 'cart.html'; break;
+  case 'promo': location.href = 'promo.html'; break;
+  case 'profile': location.href = 'profile.html'; break;
+  case 'more': location.href = 'more.html'; break;
+
+
         }
       });
     });

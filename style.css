@@ -2,6 +2,7 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #fff;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 
 header {
@@ -57,7 +58,14 @@ header .cart {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #fff; /* добавлено */
+  transition: background-color 0.2s ease;
 }
+
+.address-container:hover {
+  background-color: #f5f5f5;
+}
+
 
 .address-container span {
   font-weight: bold;
@@ -74,7 +82,13 @@ header .cart {
   border-radius: 12px;
   font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
+
+.address-container button:hover {
+  background-color: #a70000;
+}
+
 
 
 .main-banner {
@@ -221,10 +235,13 @@ body {
 }
 
 .footer {
+  position: relative;
+  z-index: 1;
   background: #111;
   padding: 30px 20px;
   text-align: center;
   color: #eee;
+  padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px) + 64px);
 }
 
 .footer__logo img {
@@ -260,6 +277,8 @@ body {
   margin: 0 10px;
   filter: brightness(0) invert(1); /* иконки становятся белыми */
 }
+
+
 
 .footer__bottom {
   margin-top: 30px;
